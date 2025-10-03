@@ -8,15 +8,6 @@ import sys
 import os
 from pathlib import Path
 
-# GazeGaussianのパスを追加
-sys.path.insert(0, 'GazeGaussian-main')
-
-from configs.gazegaussian_options import BaseOptions
-from trainer.gazegaussian_trainer import GazeGaussianTrainer
-from utils.recorder import GazeGaussianTrainRecorder
-from dataloader.eth_xgaze import get_test_loader
-
-
 def main():
     parser = argparse.ArgumentParser(
         description='GazeGaussian視線リダイレクション推論',
@@ -36,6 +27,26 @@ def main():
                         help='処理する開始フレーム番号')
 
     args = parser.parse_args()
+
+    # 作業ディレクトリ変更前にパスを絶対パスに変換
+    args.input = str(Path(args.input).resolve())
+    args.checkpoint = str(Path(args.checkpoint).resolve())
+    args.output_dir = str(Path(args.output_dir).resolve())
+
+    # GazeGaussianのconfigsディレクトリにアクセスできるように、カレントディレクトリを変更
+    # (get_test_loaderが相対パスでconfigs/を探すため)
+    script_dir = Path(__file__).parent.resolve()
+    gazegaussian_dir = script_dir / 'GazeGaussian-main'
+    os.chdir(gazegaussian_dir)
+
+    # GazeGaussianのパスを追加（ディレクトリ変更後）
+    sys.path.insert(0, str(gazegaussian_dir))
+
+    # ディレクトリ変更後にimport
+    from configs.gazegaussian_options import BaseOptions
+    from trainer.gazegaussian_trainer import GazeGaussianTrainer
+    from utils.recorder import GazeGaussianTrainRecorder
+    from dataloader.eth_xgaze import get_test_loader
 
     # 入力ファイルとチェックポイントの存在確認
     if not os.path.exists(args.input):
