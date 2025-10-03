@@ -1,3 +1,4 @@
+import os
 import pickle as pkl
 
 import torch
@@ -8,7 +9,10 @@ from configs.gazenerf_options import BaseOptions
 
 def parse_3dmm_file():
 
-    with open("configs/config_models/nl3dmm_dict.pkl", "rb") as f:
+    # GazeNeRF-mainディレクトリからの絶対パス
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+    model_path = os.path.join(base_dir, "configs/config_models/nl3dmm_dict.pkl")
+    with open(model_path, "rb") as f:
         temp_dict = pkl.load(f)
 
     mu = temp_dict["mu"]

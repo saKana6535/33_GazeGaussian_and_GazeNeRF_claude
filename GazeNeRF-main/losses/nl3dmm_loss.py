@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -13,7 +14,10 @@ class NL3DMMLoss(object):
         return loss
 
     def build_info(self):
-        skinmask = np.load("configs/config_files/skinmask.npy")
+        # GazeNeRF-mainディレクトリからの絶対パス
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        skinmask_path = os.path.join(base_dir, "configs/config_files/skinmask.npy")
+        skinmask = np.load(skinmask_path)
         self.skinmask = torch.from_numpy(skinmask).view(1, -1, 1)  # [1, n_v, 1]
 
         lm_weight = torch.ones(68, dtype=torch.float32)

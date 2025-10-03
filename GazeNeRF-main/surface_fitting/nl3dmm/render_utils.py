@@ -62,7 +62,9 @@ class ExtractLandMarkPosition(nn.Module):
         self.build_info()
 
     def build_info(self):
-        lm_contour_info = "configs/config_files/LandMarkInfo.pkl"
+        # GazeNeRF-mainディレクトリからの絶対パス
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        lm_contour_info = os.path.join(base_dir, "configs/config_files/LandMarkInfo.pkl")
         assert os.path.exists(lm_contour_info)
         with open(lm_contour_info, "rb") as f:
             data_dict = pkl.load(f)

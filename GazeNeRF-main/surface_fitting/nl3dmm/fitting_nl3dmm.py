@@ -45,8 +45,11 @@ class FittingNL3DMM(object):
         self.nl3dmm_render = NL3DMMRenderer(self.intermediate_size, self.opt).to(
             self.device
         )
+        # GazeNeRF-mainディレクトリからの絶対パス
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        model_path = os.path.join(base_dir, "configs/config_models/nl3dmm_net_dict.pth")
         self.nl3dmm_render = soft_load_model(
-            self.nl3dmm_render, "configs/config_models/nl3dmm_net_dict.pth"
+            self.nl3dmm_render, model_path
         )
         self.loss_utils = NL3DMMLoss()
 

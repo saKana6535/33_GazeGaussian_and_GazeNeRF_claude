@@ -24,10 +24,13 @@ class GenMask(object):
             self.device = "cuda:%s" % gpu_id
         else:
             self.device = "cpu"
-        self.model_path = "configs/config_models/faceparsing_model.pth"
+
+        # GazeNeRF-mainディレクトリからの絶対パス
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        self.model_path = os.path.join(base_dir, "configs/config_models/faceparsing_model.pth")
         self.log = log
 
-        self.second_model_path = "configs/config_models/model.pth"
+        self.second_model_path = os.path.join(base_dir, "configs/config_models/model.pth")
 
         self.init_model()
         self.lut = np.zeros((256,), dtype=np.uint8)

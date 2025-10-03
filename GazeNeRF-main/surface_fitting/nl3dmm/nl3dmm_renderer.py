@@ -1,5 +1,6 @@
 # isort: skip_file
 from surface_fitting.nl3dmm.face_models import Linear_3DMM, NonLinear_3DMM
+import os
 import numpy as np
 import torch
 import torch.nn as nn
@@ -41,7 +42,10 @@ class NL3DMMRenderer(nn.Module):
         self.decoder_nl3dmm_new = NonLinear_3DMM(self.opt)
 
     def build_info(self):
-        topo_info = np.load("configs/config_files/nl_3dmm_topo_info.npz")
+        # GazeNeRF-mainディレクトリからの絶対パス
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        topo_path = os.path.join(base_dir, "configs/config_files/nl_3dmm_topo_info.npz")
+        topo_info = np.load(topo_path)
         tris = torch.as_tensor(topo_info["fv_indices"]).long()
         vert_tris = torch.as_tensor(topo_info["corr_vf_indices"]).long()
 
