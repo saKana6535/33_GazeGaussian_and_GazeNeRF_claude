@@ -207,3 +207,44 @@ class GazeGaussianTrainRecorder():
 
     def print_info(self, info):
         logging.getLogger('gaze').info(info)
+
+    def visualize(self, log_data):
+        """
+        evaluate_single_imageから呼ばれる可視化メソッド
+        novel_gaze_head_set, novel_gaze_set, novel_head_setを保存
+        """
+        subject = log_data['subject']
+        start_frame = log_data['start_frame']
+
+        # 出力ディレクトリを作成
+        output_dir = os.path.join(self.result_path, subject)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # novel_gaze_head_set (視線と頭部姿勢の両方を変更)
+        if 'novel_gaze_head_set' in log_data and log_data['novel_gaze_head_set'] is not None:
+            gaze_head_dir = os.path.join(output_dir, 'novel_gaze_head')
+            os.makedirs(gaze_head_dir, exist_ok=True)
+            for idx, img in enumerate(log_data['novel_gaze_head_set']):
+                img_path = os.path.join(gaze_head_dir, f'frame_{start_frame:04d}_view_{idx:03d}.png')
+                imageio.imwrite(img_path, img)
+            self.print_info(f"Saved {len(log_data['novel_gaze_head_set'])} novel gaze+head images to {gaze_head_dir}")
+
+        # novel_gaze_set (視線のみ変更)
+        if 'novel_gaze_set' in log_data and log_data['novel_gaze_set'] is not None:
+            gaze_dir = os.path.join(output_dir, 'novel_gaze')
+            os.makedirs(gaze_dir, exist_ok=True)
+            for idx, img in enumerate(log_data['novel_gaze_set']):
+                img_path = os.path.join(gaze_dir, f'frame_{start_frame:04d}_gaze_{idx:03d}.png')
+                imageio.imwrite(img_path, img)
+            self.print_info(f"Saved {len(log_data['novel_gaze_set'])} novel gaze images to {gaze_dir}")
+
+        # novel_head_set (頭部姿勢のみ変更)
+        if 'novel_head_set' in log_data and log_data['novel_head_set'] is not None:
+            head_dir = os.path.join(output_dir, 'novel_head')
+            os.makedirs(head_dir, exist_ok=True)
+            for idx, img in enumerate(log_data['novel_head_set']):
+                img_path = os.path.join(head_dir, f'frame_{start_frame:04d}_view_{idx:03d}.png')
+                imageio.imwrite(img_path, img)
+            self.print_info(f"Saved {len(log_data['novel_head_set'])} novel head images to {head_dir}")
+
+        self.print_info(f"Visualization completed for subject '{subject}', frame {start_frame}")
