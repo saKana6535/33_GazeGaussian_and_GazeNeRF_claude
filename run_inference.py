@@ -120,13 +120,10 @@ def main():
     print(f"データローダー作成完了")
 
     # Recorderとtrainerの初期化（GazeGaussianの既存クラスを使用）
-    print("モデルを初期化中...")
+    # チェックポイントは初期化時に自動的にロードされる
+    print("モデルを初期化中（チェックポイントを自動ロード）...")
     recorder = GazeGaussianTrainRecorder(opt)
     trainer = GazeGaussianTrainer(opt, recorder)
-
-    # チェックポイントのロード
-    print(f"チェックポイントをロード中...")
-    trainer.load_checkpoint(args.checkpoint)
 
     # GazeGaussianの既存評価関数を使用して推論実行
     print("\n推論を実行中...")
