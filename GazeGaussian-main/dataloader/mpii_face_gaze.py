@@ -264,7 +264,7 @@ class GazeDataset(Dataset):
                 ] 
         else:
             print("load the file: ", index_file[0])
-            self.idx_to_kv = np.loadtxt(index_file[0], dtype=np.int)
+            self.idx_to_kv = np.loadtxt(index_file[0], dtype=int)
 
         for num_i in range(0, len(self.hdfs)):
             if self.hdfs[num_i]:
@@ -274,7 +274,7 @@ class GazeDataset(Dataset):
         if is_shuffle and index_file is None:
             random.shuffle(self.idx_to_kv)  # random the order to stable the training
 
-        self.target_idx = np.loadtxt("configs/config_files/mpii_evaluation_target_single_subject.txt", dtype=np.int)
+        self.target_idx = np.loadtxt("configs/config_files/mpii_evaluation_target_single_subject.txt", dtype=int)
 
 
         self.hdf = None

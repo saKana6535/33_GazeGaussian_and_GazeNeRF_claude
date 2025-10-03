@@ -295,7 +295,7 @@ class GazeDataset(Dataset):
                 ]
         else:
             print("load the file: ", index_file[0])
-            self.idx_to_kv = np.loadtxt(index_file[0], dtype=np.int)
+            self.idx_to_kv = np.loadtxt(index_file[0], dtype=int)
 
 
         init_sel = 0
@@ -323,7 +323,7 @@ class GazeDataset(Dataset):
                 self.hdfs[num_i].close()
                 self.hdfs[num_i] = None
         
-        self.target_idx = np.loadtxt(f"configs/config_files/{self.dataset_name}evaluation_target_single_subject.txt", dtype=np.int)
+        self.target_idx = np.loadtxt(f"configs/config_files/{self.dataset_name}evaluation_target_single_subject.txt", dtype=int)
         if sub_folder == "val":
             new_idx_to_kv = []
             self.target_dict = {}
