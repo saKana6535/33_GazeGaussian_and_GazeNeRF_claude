@@ -25,7 +25,7 @@ class Gen2DLandmarks(object):
         else:
             self.device = "cpu"
         self.fa_func = face_alignment.FaceAlignment(
-            face_alignment.LandmarksType._2D, flip_input=False, device=self.device
+            face_alignment.LandmarksType.TWO_D, flip_input=False, device=self.device
         )
         self.log = log
 
