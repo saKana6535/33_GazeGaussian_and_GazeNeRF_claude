@@ -5,3 +5,11 @@ __pycache__/
 *.gz
 *.zip
 *.pth
+*.npz
+*.pkl
+*.png
+*.mat
+*.tar
+*.txt
+*.md
+*audit.json

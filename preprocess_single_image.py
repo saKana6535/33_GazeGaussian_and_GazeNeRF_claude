@@ -166,7 +166,8 @@ class SingleImagePreprocessor:
 
         # ステップ4: HDF5ファイルの生成
         print("HDF5ファイルを生成中...")
-        output_h5_path = os.path.join(output_dir, 'single_image_preprocessed.h5')
+        # GazeGaussianの命名規則に従う: xgaze_<subject>.h5
+        output_h5_path = os.path.join(output_dir, 'xgaze_single_image.h5')
 
         self.create_h5_file(
             output_h5_path,
@@ -211,12 +212,15 @@ class SingleImagePreprocessor:
             h5f.create_dataset('facial_landmarks', data=landmarks[np.newaxis, ...], dtype=np.float32)
 
             # 3Dランドマーク (surface_dataから取得)
+            # ETH-XGazeは66点のランドマークを使用
             if 'lm68' in surface_data:
                 facial_landmarks_3d = surface_data['lm68'].cpu().numpy()
-                h5f.create_dataset('facial_landmarks_3d', data=facial_landmarks_3d[np.newaxis, ...], dtype=np.float32)
+                # 最初の66点のみ使用 (68点から66点に)
+                facial_landmarks_3d_66 = facial_landmarks_3d[:66, :]
+                h5f.create_dataset('facial_landmarks_3d', data=facial_landmarks_3d_66[np.newaxis, ...], dtype=np.float32)
             else:
-                # ダミーデータ
-                h5f.create_dataset('facial_landmarks_3d', data=np.zeros((1, 68, 3)), dtype=np.float32)
+                # ダミーデータ (66点)
+                h5f.create_dataset('facial_landmarks_3d', data=np.zeros((1, 66, 3)), dtype=np.float32)
 
             # マスク
             h5f.create_dataset('head_mask', data=head_mask[np.newaxis, ...], dtype=np.uint8)
@@ -224,12 +228,18 @@ class SingleImagePreprocessor:
             h5f.create_dataset('right_eye_mask', data=right_eye_mask[np.newaxis, ...], dtype=np.uint8)
 
             # 潜在コード (NL3DMM)
+            # GazeGaussianのETH-XGazeデータは251次元を使用
+            # GazeNeRFのNL3DMMは306次元なので、最初の251次元を使用
             if 'code' in surface_data:
                 code = surface_data['code'].cpu().numpy()
-                h5f.create_dataset('latent_codes', data=code, dtype=np.float32)
+                if len(code.shape) == 1:
+                    code = code[np.newaxis, :]  # (306,) -> (1, 306)
+                # 251次元に切り詰める
+                code_trimmed = code[:, :251]
+                h5f.create_dataset('latent_codes', data=code_trimmed, dtype=np.float32)
             else:
-                # ダミーデータ (256次元)
-                h5f.create_dataset('latent_codes', data=np.zeros((1, 256)), dtype=np.float32)
+                # ダミーデータ (251次元)
+                h5f.create_dataset('latent_codes', data=np.zeros((1, 251)), dtype=np.float32)
 
             # カメラパラメータ
             K = self.get_camera_matrix()
@@ -264,8 +274,8 @@ class SingleImagePreprocessor:
             head_pose = np.array([5.0, 0.0], dtype=np.float32)  # 少し下向き
             h5f.create_dataset('pitchyaw_head', data=head_pose[np.newaxis, ...], dtype=np.float32)
 
-            # 顔の頭部姿勢 (Rodrigues形式)
-            face_head_pose = np.array([0.1, 0.0, 0.0], dtype=np.float32)
+            # 顔の頭部姿勢 (pitch-yaw形式、ETH-XGazeは2次元)
+            face_head_pose = np.array([5.0, 0.0], dtype=np.float32)  # pitch, yaw
             h5f.create_dataset('face_head_pose', data=face_head_pose[np.newaxis, ...], dtype=np.float32)
 
             # Pose (6D: rotation + translation)
@@ -277,18 +287,27 @@ class SingleImagePreprocessor:
             h5f.create_dataset('scale', data=scale[np.newaxis, ...], dtype=np.float32)
 
             # 頂点 (surface_dataから取得)
+            # ETH-XGazeは35709頂点を使用
+            # GazeNeRFのNL3DMMは5023頂点なので、パディングまたはダミーデータを使用
             if 'verts' in surface_data:
                 vertices = surface_data['verts'].cpu().numpy()
-                h5f.create_dataset('vertice', data=vertices, dtype=np.float32)
+                # vertices形状を確認: (5023, 3) または (1, 5023, 3)
+                if len(vertices.shape) == 2:
+                    vertices = vertices[np.newaxis, :]  # (5023, 3) -> (1, 5023, 3)
+
+                # 5023頂点を35709頂点にパディング (ゼロパディング)
+                vertices_padded = np.zeros((1, 35709, 3), dtype=np.float32)
+                vertices_padded[:, :vertices.shape[1], :] = vertices
+                h5f.create_dataset('vertice', data=vertices_padded, dtype=np.float32)
             else:
-                # ダミーデータ
-                h5f.create_dataset('vertice', data=np.zeros((1, 5023, 3)), dtype=np.float32)
+                # ダミーデータ (35709頂点)
+                h5f.create_dataset('vertice', data=np.zeros((1, 35709, 3)), dtype=np.float32)
 
             # カメラインデックス
-            h5f.create_dataset('cam_index', data=np.array([[0]], dtype=np.int32))
+            h5f.create_dataset('cam_index', data=np.array([[0]], dtype=np.uint8))
 
             # フレームインデックス
-            h5f.create_dataset('frame_index', data=np.array([[0]], dtype=np.int32))
+            h5f.create_dataset('frame_index', data=np.array([[0]], dtype=np.uint8))
 
         print(f"HDF5ファイルを作成しました: {output_path}")
 
@@ -312,8 +331,9 @@ def main():
 
     print(f"\n前処理が完了しました!")
     print(f"出力ファイル: {output_path}")
+    print(f"\n注意: ファイル名は 'xgaze_single_image.h5' (GazeGaussianの命名規則に従う)")
     print(f"\nGazeGaussianで使用するには:")
-    print(f"  python GazeGaussian-main/inference.py --input {output_path}")
+    print(f"  python run_inference.py --input {output_path} --checkpoint <checkpoint_path>")
 
 
 if __name__ == '__main__':

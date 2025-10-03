@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  gazegaussian:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gazegaussian-inference
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      # プロジェクト全体をマウント
+      - ./GazeGaussian-main:/workspace/GazeGaussian
+      # 前処理済みデータをマウント
+      - ./preprocessed_output:/workspace/preprocessed_output
+      # 出力ディレクトリをマウント
+      - ./output:/workspace/output
+      # run_inference.pyをマウント
+      - ./run_inference.py:/workspace/run_inference.py
+    working_dir: /workspace/GazeGaussian
+    shm_size: '8gb'
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: /bin/bash
